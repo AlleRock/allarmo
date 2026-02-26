@@ -1,0 +1,16 @@
+{
+  "name": "ALLARMO",
+  "short_name": "ALLARMO",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#05070a",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "icona.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
