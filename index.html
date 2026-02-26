@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ALLARMO - 2026 Edition</title>
+    <title>ALLARMO - Persistenza Totale</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ALLARMO">
     
     <link rel="apple-touch-icon" href="icona.png">
-    
     <link rel="manifest" href="manifest.json">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -81,6 +80,19 @@
             opacity: 0.8;
         }
 
+        .status-bar {
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         .input-card {
             background: var(--glass-bg);
             backdrop-filter: blur(25px);
@@ -89,7 +101,6 @@
             border-radius: 28px;
             padding: 24px;
             margin-bottom: 25px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
         label { 
@@ -99,7 +110,6 @@
             font-weight: 800; 
             color: #94a3b8; 
             text-transform: uppercase; 
-            letter-spacing: 0.05em;
         }
 
         input[type="text"], input[type="datetime-local"] {
@@ -112,18 +122,6 @@
             font-size: 16px;
             margin-bottom: 18px;
             outline: none;
-            transition: border-color 0.3s;
-            -webkit-appearance: none;
-        }
-
-        input:focus { border-color: var(--accent-green); }
-
-        .file-input-wrapper { margin-bottom: 18px; }
-        
-        input[type="file"] {
-            width: 100%;
-            color: #94a3b8;
-            font-size: 0.8rem;
         }
 
         button {
@@ -137,24 +135,7 @@
             cursor: pointer;
             text-transform: uppercase;
             font-size: 0.85rem;
-            letter-spacing: 0.05em;
-            transition: all 0.2s ease;
-        }
-
-        button:active { transform: scale(0.97); opacity: 0.9; }
-
-        button.secondary {
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-            border: 1px solid var(--glass-border);
-            margin-top: 10px;
-        }
-
-        .backup-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 12px;
+            margin-bottom: 10px;
         }
 
         .timer-item {
@@ -164,46 +145,36 @@
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             margin-bottom: 18px;
-            position: relative;
             overflow: hidden;
             cursor: pointer;
-            transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1);
         }
 
         .timer-item-overlay {
             padding: 20px;
-            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 100%);
             min-height: 120px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        .timer-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .timer-name { font-weight: 600; font-size: 1.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        
         .timer-display { 
             font-family: 'JetBrains Mono', monospace; 
             font-size: 1.7rem; 
-            font-weight: 500; 
-            text-shadow: 0 2px 8px rgba(0,0,0,0.5); 
         }
         
         .future { color: var(--accent-green); }
         .past { color: var(--accent-red); }
 
-        .delete-btn { 
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: var(--accent-red);
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            z-index: 2;
+        .calendar-sync {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            font-size: 0.6rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            font-weight: 800;
         }
 
         .modal-view {
@@ -217,43 +188,13 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom) 20px;
         }
         
         .modal-view.active { display: flex; }
 
-        .modal-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.9) 100%);
-            z-index: -1;
-        }
-
-        .modal-close-btn {
-            position: absolute;
-            top: calc(20px + env(safe-area-inset-top));
-            right: 20px;
-            color: #fff;
-            font-size: 2.5rem;
-            background: none; border: none;
-        }
-
-        .modal-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 25px; text-shadow: 0 0 20px rgba(0,0,0,0.8); text-align: center; }
-        .modal-display { font-family: 'JetBrains Mono', monospace; font-size: 3rem; font-weight: 500; text-shadow: 0 0 30px rgba(0,0,0,1); }
-
         footer { 
-            margin-top: auto; 
-            padding: 30px; 
-            opacity: 0.5; 
-            font-size: 0.7rem; 
-            text-align: center; 
-            letter-spacing: 0.1em;
-            font-weight: 400;
+            margin-top: auto; padding: 30px; opacity: 0.5; font-size: 0.7rem; text-align: center; 
         }
-        
-        .mastro { color: var(--accent-green); font-weight: 600; text-decoration: none; }
-        
-        #import-input { display: none; }
     </style>
 </head>
 <body>
@@ -264,49 +205,91 @@
             <div class="subtitle">Persistenza Immersiva</div>
         </header>
 
+        <div id="setup-trigger" class="status-bar" onclick="setupPermissions()" style="color: var(--accent-red); border-color: var(--accent-red);">
+            SBLOCCA AUDIO E NOTIFICHE
+        </div>
+
         <section class="input-card">
             <label>Identificativo</label>
-            <input type="text" id="name" placeholder="Es. Evento Speciale" autocomplete="off">
+            <input type="text" id="name" placeholder="Es. Visita Medica" autocomplete="off">
             
-            <label>Scadenza (Picker iOS)</label>
+            <label>Data e Ora Scadenza</label>
             <input type="datetime-local" id="date" required>
             
-            <label>Sfondo Visivo</label>
-            <div class="file-input-wrapper">
-                <input type="file" id="image-input" accept="image/*">
-            </div>
+            <label>Immagine (Opzionale)</label>
+            <input type="file" id="image-input" accept="image/*" style="margin-bottom: 18px; color: #94a3b8; font-size: 0.8rem;">
 
             <button onclick="handleSave()">Attiva Monitoraggio</button>
-            
-            <div class="backup-controls">
-                <button class="secondary" onclick="exportData()">Backup</button>
-                <button class="secondary" onclick="document.getElementById('import-input').click()">Ripristina</button>
-            </div>
-            <input type="file" id="import-input" accept=".json" onchange="importData(event)">
         </section>
 
         <div id="list"></div>
     </div>
 
     <div id="modal-view" class="modal-view">
-        <div class="modal-overlay"></div>
-        <button class="modal-close-btn" onclick="closeModal()">×</button>
-        <div id="modal-title" class="modal-title"></div>
-        <div id="modal-display" class="modal-display">--:--:--:--</div>
+        <button onclick="closeModal()" style="position:absolute; top:40px; right:20px; background:none; border:none; color:white; font-size:2.5rem;">×</button>
+        <div id="modal-title" style="font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; text-align:center; padding: 0 20px;"></div>
+        <div id="modal-display" style="font-family: 'JetBrains Mono', monospace; font-size: 3rem;"></div>
     </div>
 
     <footer>
-        &copy; 2026 - CREATED BY <span class="mastro">MASTRO PROGRAMMO</span>
+        &copy; 2026 - CREATED BY <span style="color:var(--accent-green); font-weight:bold;">MASTRO PROGRAMMO</span>
     </footer>
 
-    <audio id="beep" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+    <audio id="beep" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <script>
-        const STORAGE_KEY = 'allarmo_2026_v1';
+        const STORAGE_KEY = 'allarmo_master_2026';
         let timers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let activeId = null;
+        let audioEnabled = false;
 
         function sync() { localStorage.setItem(STORAGE_KEY, JSON.stringify(timers)); }
+
+        async function setupPermissions() {
+            const beep = document.getElementById('beep');
+            try {
+                await beep.play();
+                beep.pause();
+                beep.currentTime = 0;
+                audioEnabled = true;
+                await Notification.requestPermission();
+                
+                const btn = document.getElementById('setup-trigger');
+                btn.innerText = "AUDIO E NOTIFICHE ATTIVI";
+                btn.style.color = "var(--accent-green)";
+                btn.style.borderColor = "var(--accent-green)";
+            } catch (e) { console.log(e); }
+        }
+
+        // Funzione per generare e scaricare file ICS per iPhone
+        function downloadICS(name, dateStr) {
+            const date = new Date(dateStr);
+            const start = date.toISOString().replace(/-|:|\.\d+/g, "");
+            const end = new Date(date.getTime() + 1000 * 60 * 15).toISOString().replace(/-|:|\.\d+/g, "");
+            
+            const icsData = [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "BEGIN:VEVENT",
+                `SUMMARY:ALLARMO: ${name}`,
+                `DTSTART:${start}`,
+                `DTEND:${end}`,
+                "DESCRIPTION:Promemoria creato da ALLARMO",
+                "BEGIN:VALARM",
+                "TRIGGER:-PT0M",
+                "ACTION:DISPLAY",
+                "DESCRIPTION:SVEGLIA!",
+                "END:VALARM",
+                "END:VEVENT",
+                "END:VCALENDAR"
+            ].join("\r\n");
+
+            const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute("download", `${name}.ics`);
+            link.click();
+        }
 
         function handleSave() {
             const n = document.getElementById('name');
@@ -326,14 +309,22 @@
         }
 
         function save(name, date, img) {
-            timers.push({
+            const newTimer = {
                 id: Date.now(),
                 name: name,
                 target: new Date(date).getTime(),
+                targetISO: date, // Salviamo per l'ICS
                 fired: false,
                 image: img
-            });
+            };
+            timers.push(newTimer);
             sync();
+            
+            // Opzionale: Chiedi se vuole sincronizzare con calendario iOS subito
+            if(confirm("Vuoi aggiungere questo allarme al calendario di iPhone per sicurezza massima?")) {
+                downloadICS(name, date);
+            }
+
             document.getElementById('name').value = '';
             document.getElementById('date').value = '';
             document.getElementById('image-input').value = '';
@@ -344,7 +335,6 @@
             if(e) e.stopPropagation();
             timers = timers.filter(t => t.id !== id);
             sync();
-            if(id === activeId) closeModal();
             render();
         }
 
@@ -362,33 +352,17 @@
             document.getElementById('modal-view').classList.remove('active');
         }
 
-        function exportData() {
-            const blob = new Blob([JSON.stringify(timers)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'allarmo_2026_backup.json';
-            a.click();
-        }
-
-        function importData(e) {
-            const r = new FileReader();
-            r.onload = (ev) => {
-                try {
-                    timers = JSON.parse(ev.target.result);
-                    sync(); render();
-                } catch(e) { alert("File non valido"); }
-            };
-            r.readAsText(e.target.files[0]);
-        }
-
         function render() {
             const l = document.getElementById('list');
             l.innerHTML = timers.map(t => `
                 <div class="timer-item" ${t.image ? `style="background-image:url(${t.image})"` : ''} onclick="openModal(${t.id})">
                     <div class="timer-item-overlay">
-                        <div class="timer-header">
-                            <span class="timer-name">${t.name}</span>
-                            <button class="delete-btn" onclick="deleteTimer(${t.id}, event)">×</button>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:800; font-size:1.1rem;">${t.name}</span>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <span class="calendar-sync" onclick="event.stopPropagation(); downloadICS('${t.name}', '${t.targetISO}')">Backup iOS</span>
+                                <span onclick="deleteTimer(${t.id}, event)" style="color:var(--accent-red); font-size:1.5rem;">×</span>
+                            </div>
                         </div>
                         <div class="timer-display" id="clock-${t.id}">--:--:--:--</div>
                     </div>
@@ -422,22 +396,21 @@
                 }
 
                 if(isPast && !t.fired) {
-                    document.getElementById('beep').play().catch(()=>{});
-                    if(Notification.permission === "granted") new Notification("ALLARMO!", { body: t.name });
-                    t.fired = true; sync();
+                    if(audioEnabled) document.getElementById('beep').play().catch(()=>{});
+                    if(Notification.permission === "granted") {
+                        new Notification("ALLARMO!", { body: t.name });
+                    }
+                    t.fired = true; 
+                    sync();
                 }
             });
         }
 
         setInterval(tick, 1000);
         render();
-        if ("Notification" in window) Notification.requestPermission();
 
-        // SERVICE WORKER AUTOMATICO
         if ('serviceWorker' in navigator) {
-            const sw = `self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
-            const b = new Blob([sw], {type: 'text/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(b));
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
 </body>
