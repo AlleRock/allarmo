@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ALLARMO - Persistenza Immersiva v2.1</title>
+    <title>ALLARMO - Persistenza Immersiva v2.2</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -22,13 +22,10 @@
             --glass-bg: rgba(255, 255, 255, 0.04);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-main: #f8fafc;
-            --modal-bg: rgba(0, 0, 0, 0.95); /* Sfondo modale più scuro per contrasto */
+            --modal-bg: rgba(0, 0, 0, 0.95);
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -46,229 +43,84 @@
             align-items: center;
         }
 
-        .container {
-            width: 100%;
-            max-width: 480px;
-            z-index: 1;
-        }
+        .container { width: 100%; max-width: 480px; z-index: 1; }
 
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-top: env(safe-area-inset-top);
-        }
+        header { text-align: center; margin-bottom: 30px; padding-top: env(safe-area-inset-top); }
 
         h1 { 
-            font-weight: 800; 
-            font-size: 2.4rem; 
-            letter-spacing: 0.1em; 
-            margin: 0; 
-            color: #fff;
-            text-transform: uppercase;
+            font-weight: 800; font-size: 2.4rem; letter-spacing: 0.1em; margin: 0; 
+            color: #fff; text-transform: uppercase;
             background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(255,255,255,0.1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
         .subtitle {
-            font-size: 0.75rem;
-            letter-spacing: 0.25em;
-            color: var(--accent-green);
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-top: 5px;
-            opacity: 0.9;
+            font-size: 0.75rem; letter-spacing: 0.25em; color: var(--accent-green);
+            text-transform: uppercase; font-weight: 600; margin-top: 5px;
         }
 
         .status-bar {
-            width: 100%;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            padding: 12px;
-            border-radius: 14px;
-            margin-bottom: 25px;
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
+            width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border);
+            padding: 12px; border-radius: 14px; margin-bottom: 25px; text-align: center;
+            font-size: 0.75rem; font-weight: 700; cursor: pointer;
         }
 
         .input-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 28px;
-            margin-bottom: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); border-radius: 30px; padding: 28px; margin-bottom: 30px;
         }
 
         label { 
-            display: block; 
-            margin-bottom: 10px; 
-            font-size: 0.7rem; 
-            font-weight: 800; 
-            color: #a1a1aa; 
-            text-transform: uppercase; 
-            letter-spacing: 0.1em;
+            display: block; margin-bottom: 10px; font-size: 0.7rem; font-weight: 800; 
+            color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.1em;
         }
 
         input[type="text"], input[type="datetime-local"] {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 16px;
-            color: white;
-            font-size: 16px; /* Evita zoom su iOS */
-            margin-bottom: 20px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        input:focus { border-color: var(--accent-green); }
-
-        .file-input-wrapper {
-            position: relative;
-            margin-bottom: 20px;
-            color: #a1a1aa;
-            font-size: 0.8rem;
+            width: 100%; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 16px; color: white; font-size: 16px; margin-bottom: 20px; outline: none;
         }
 
         button {
-            width: 100%;
-            background: #fff;
-            border: none;
-            border-radius: 16px;
-            padding: 18px;
-            color: #000;
-            font-weight: 800;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 0.05em;
-            transition: transform 0.2s, opacity 0.2s;
+            width: 100%; background: #fff; border: none; border-radius: 16px; padding: 18px;
+            color: #000; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 0.9rem;
         }
-
-        button:active { transform: scale(0.97); opacity: 0.9; }
 
         .timer-item {
-            background-color: #111;
-            background-size: cover;
-            background-position: center;
-            border: 1px solid var(--glass-border);
-            border-radius: 26px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.3s;
-            position: relative;
+            background-color: #111; background-size: cover; background-position: center;
+            border: 1px solid var(--glass-border); border-radius: 26px; margin-bottom: 20px;
+            overflow: hidden; position: relative;
         }
-
-        .timer-item:active { transform: scale(0.98); }
 
         .timer-item-overlay {
-            padding: 25px;
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 100%);
-            min-height: 140px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            padding: 25px; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 100%);
+            min-height: 140px; display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        .timer-display { 
-            font-family: 'JetBrains Mono', monospace; 
-            font-size: 1.9rem; 
-            font-weight: 500;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-        
+        .timer-display { font-family: 'JetBrains Mono', monospace; font-size: 1.9rem; }
         .future { color: var(--accent-green); }
         .past { color: var(--accent-red); }
 
-        .item-controls {
-            display: flex; gap: 12px; align-items: center;
-        }
-
+        .item-controls { display: flex; gap: 12px; }
         .control-btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid var(--glass-border);
-            color: #fff;
-            font-size: 0.65rem;
-            padding: 6px 12px;
-            border-radius: 8px;
-            text-transform: uppercase;
-            font-weight: 700;
-            cursor: pointer;
+            background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);
+            color: #fff; font-size: 0.65rem; padding: 6px 12px; border-radius: 8px; text-transform: uppercase;
         }
 
-        .control-btn.delete {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--accent-red);
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        /* Modal View Rifinita */
         .modal-view {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--modal-bg);
-            background-size: cover;
-            background-position: center;
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom) 20px;
-            transition: opacity 0.4s;
-            opacity: 0;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--modal-bg); background-size: cover; background-position: center;
+            z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center;
         }
         
-        .modal-view.active { display: flex; opacity: 1; }
+        .modal-view.active { display: flex; }
 
-        .modal-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.95) 100%);
-            z-index: -1;
-        }
-
-        /* Pulsante chiusura con contrasto garantito */
         .modal-close-btn {
-            position: absolute;
-            top: calc(20px + env(safe-area-inset-top));
-            right: 20px;
-            color: #fff;
-            font-size: 2.5rem;
-            background: rgba(0,0,0,0.5); /* Sfondo scuro per contrasto */
-            border: none;
-            border-radius: 50%;
-            width: 50px; height: 50px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            backdrop-filter: blur(5px);
-            z-index: 1001;
+            position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px;
+            color: #fff; font-size: 2.5rem; background: rgba(0,0,0,0.6); border: none;
+            border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
         }
 
-        .modal-title { 
-            font-size: 2rem; font-weight: 800; margin-bottom: 30px; 
-            text-align: center; padding: 0 20px; color: #fff;
-            text-shadow: 0 2px 15px rgba(0,0,0,0.7);
-        }
-        
-        .modal-display { 
-            font-family: 'JetBrains Mono', monospace; font-size: 3.5rem; 
-            font-weight: 500; text-shadow: 0 0 30px rgba(0,0,0,1); 
-        }
-
-        footer { 
-            margin-top: auto; padding: 40px; opacity: 0.6; font-size: 0.75rem; 
-            text-align: center; letter-spacing: 0.1em;
-        }
+        footer { margin-top: auto; padding: 40px; opacity: 0.6; font-size: 0.75rem; text-align: center; }
     </style>
 </head>
 <body>
@@ -291,9 +143,7 @@
             <input type="datetime-local" id="date" required>
             
             <label>IMMAGINE DI SFONDO (OPZIONALE)</label>
-            <div class="file-input-wrapper">
-                <input type="file" id="image-input" accept="image/*">
-            </div>
+            <input type="file" id="image-input" accept="image/*" style="margin-bottom: 20px; color: #a1a1aa; font-size: 0.8rem;">
 
             <button id="save-btn" onclick="handleSave()">Attiva Monitoraggio</button>
         </section>
@@ -302,10 +152,9 @@
     </div>
 
     <div id="modal-view" class="modal-view">
-        <div class="modal-overlay"></div>
         <button class="modal-close-btn" onclick="closeModal()">×</button>
-        <div id="modal-title" class="modal-title"></div>
-        <div id="modal-display" class="modal-display">--:--:--:--</div>
+        <div id="modal-title" style="font-size: 2rem; font-weight: 800; margin-bottom: 30px; text-align: center; color: #fff;"></div>
+        <div id="modal-display" class="modal-display" style="font-family: 'JetBrains Mono', monospace; font-size: 3.5rem;"></div>
     </div>
 
     <footer>
@@ -315,11 +164,11 @@
     <audio id="beep" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <script>
-        const STORAGE_KEY = 'allarmo_v2_1';
+        const STORAGE_KEY = 'allarmo_v2_2';
         let timers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
         let activeId = null;
         let audioEnabled = false;
-        let editingId = null; // ID del timer in fase di modifica
+        let editingId = null;
 
         function sync() { localStorage.setItem(STORAGE_KEY, JSON.stringify(timers)); }
 
@@ -331,37 +180,17 @@
                 beep.currentTime = 0;
                 audioEnabled = true;
                 await Notification.requestPermission();
-                
-                const btn = document.getElementById('setup-trigger');
-                btn.innerText = "SISTEMA PRONTO (AUDIO E NOTIFICHE OK)";
-                btn.style.color = "var(--accent-green)";
-                btn.style.borderColor = "var(--accent-green)";
+                document.getElementById('setup-trigger').innerText = "SISTEMA PRONTO";
+                document.getElementById('setup-trigger').style.color = "var(--accent-green)";
+                document.getElementById('setup-trigger').style.borderColor = "var(--accent-green)";
             } catch (e) { console.log(e); }
         }
 
-        // Generazione file ICS
         function downloadICS(name, dateStr) {
             const date = new Date(dateStr);
             const start = date.toISOString().replace(/-|:|\.\d+/g, "");
             const end = new Date(date.getTime() + 1000 * 60 * 15).toISOString().replace(/-|:|\.\d+/g, "");
-            
-            const icsData = [
-                "BEGIN:VCALENDAR",
-                "VERSION:2.0",
-                "BEGIN:VEVENT",
-                `SUMMARY:ALLARMO: ${name}`,
-                `DTSTART:${start}`,
-                `DTEND:${end}`,
-                "DESCRIPTION:Promemoria creato da ALLARMO",
-                "BEGIN:VALARM",
-                "TRIGGER:-PT0M",
-                "ACTION:DISPLAY",
-                "DESCRIPTION:SVEGLIA!",
-                "END:VALARM",
-                "END:VEVENT",
-                "END:VCALENDAR"
-            ].join("\r\n");
-
+            const icsData = ["BEGIN:VCALENDAR","VERSION:2.0","BEGIN:VEVENT",`SUMMARY:ALLARMO: ${name}`,`DTSTART:${start}`,`DTEND:${end}`,"DESCRIPTION:Promemoria creato da ALLARMO","BEGIN:VALARM","TRIGGER:-PT0M","ACTION:DISPLAY","DESCRIPTION:SVEGLIA!","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
             const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
             const link = document.createElement("a");
             link.href = window.URL.createObjectURL(blob);
@@ -370,42 +199,44 @@
         }
 
         function handleSave() {
-            const n = document.getElementById('name');
-            const d = document.getElementById('date');
-            const i = document.getElementById('image-input');
+            const nameInput = document.getElementById('name');
+            const dateInput = document.getElementById('date');
+            const imageInput = document.getElementById('image-input');
             
-            if(!n.value || !d.value) return;
+            if(!nameInput.value || !dateInput.value) {
+                alert("Inserisci nome e data!");
+                return;
+            }
 
-            const file = i.files[0];
+            const file = imageInput.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onloadend = () => save(n.value, d.value, reader.result);
+                reader.onloadend = () => save(nameInput.value, dateInput.value, reader.result);
                 reader.readAsDataURL(file);
             } else {
-                save(n.value, d.value, editingId ? timers.find(t=>t.id === editingId).image : null);
+                const existingImg = editingId ? timers.find(t => t.id === editingId).image : null;
+                save(nameInput.value, dateInput.value, existingImg);
             }
         }
 
-        function save(name, date, img) {
+        function save(nameValue, dateValue, imgValue) {
             if (editingId) {
-                // Modifica timer esistente
                 const index = timers.findIndex(t => t.id === editingId);
-                timers[index].name = name;
-                timers[index].target = new Date(date).getTime();
-                timers[index].targetISO = date;
-                timers[index].image = img;
-                timers[index].fired = false; // Reset stato notifica
+                timers[index].name = nameValue;
+                timers[index].target = new Date(dateValue).getTime();
+                timers[index].targetISO = dateValue;
+                timers[index].image = imgValue;
+                timers[index].fired = false;
                 editingId = null;
                 document.getElementById('save-btn').innerText = "Attiva Monitoraggio";
             } else {
-                // Nuovo timer
                 timers.push({
                     id: Date.now(),
-                    name: name,
-                    target: new Date(date).getTime(),
-                    targetISO: date,
+                    name: nameValue,
+                    target: new Date(dateValue).getTime(),
+                    targetISO: dateValue,
                     fired: false,
-                    image: img
+                    image: imgValue
                 });
             }
             
@@ -416,43 +247,32 @@
             render();
         }
 
-        // Funzione Modifica
         function editTimer(id, e) {
             if(e) e.stopPropagation();
             const t = timers.find(x => x.id === id);
             if(!t) return;
-
             editingId = id;
             document.getElementById('name').value = t.name;
             document.getElementById('date').value = t.targetISO;
-            // L'input file non può essere pre-popolato per sicurezza
             document.getElementById('save-btn').innerText = "Salva Modifiche";
-            document.getElementById('name').focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function deleteTimer(id, e) {
             if(e) e.stopPropagation();
-            if(!confirm("Cancellare questo timer definitivamente?")) return;
+            if(!confirm("Cancellare questo timer?")) return;
             timers = timers.filter(t => t.id !== id);
             sync();
             render();
         }
 
         function openModal(id) {
-            if(editingId) return; // Non aprire modale se si sta modificando
+            if(editingId) return;
             activeId = id;
             const t = timers.find(x => x.id === id);
             const m = document.getElementById('modal-view');
             document.getElementById('modal-title').innerText = t.name;
-            
-            // Applica immagine di sfondo se esiste, altrimenti fallback
-            if (t.image) {
-                m.style.backgroundImage = `url(${t.image})`;
-            } else {
-                m.style.backgroundImage = 'none';
-                m.style.backgroundColor = 'var(--modal-bg)';
-            }
-            
+            m.style.backgroundImage = t.image ? `url(${t.image})` : 'none';
             m.classList.add('active');
         }
 
@@ -467,15 +287,15 @@
                 <div class="timer-item" ${t.image ? `style="background-image:url(${t.image})"` : ''} onclick="openModal(${t.id})">
                     <div class="timer-item-overlay">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <span style="font-weight:700; font-size:1.1rem; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.5);">${t.name}</span>
+                            <span style="font-weight:700; font-size:1.1rem; text-shadow:0 1px 3px rgba(0,0,0,0.8);">${t.name}</span>
                             <div class="item-controls">
-                                <span class="control-btn" onclick="event.stopPropagation(); editTimer(${t.id})">Modifica</span>
-                                <span class="control-btn delete" onclick="deleteTimer(${t.id}, event)">Elimina</span>
+                                <span class="control-btn" onclick="event.stopPropagation(); editTimer(${t.id})">Edit</span>
+                                <span class="control-btn" style="color:var(--accent-red)" onclick="deleteTimer(${t.id}, event)">×</span>
                             </div>
                         </div>
                         <div class="timer-display" id="clock-${t.id}">--:--:--:--</div>
                         <div style="text-align:right;">
-                             <span class="control-btn" style="background:rgba(16,185,129,0.15); color:var(--accent-green); border-color:rgba(16,185,129,0.3);" onclick="event.stopPropagation(); downloadICS('${t.name}', '${t.targetISO}')">Sincronizza iOS</span>
+                             <span class="control-btn" style="border-color:var(--accent-green); color:var(--accent-green);" onclick="event.stopPropagation(); downloadICS('${t.name}', '${t.targetISO}')">Sincronizza iOS</span>
                         </div>
                     </div>
                 </div>
@@ -489,41 +309,32 @@
                 const diff = t.target - now;
                 const isPast = diff < 0;
                 const abs = Math.abs(diff);
-
                 const d = Math.floor(abs / 86400000).toString().padStart(2,'0');
                 const h = Math.floor((abs % 86400000) / 3600000).toString().padStart(2,'0');
                 const m = Math.floor((abs % 3600000) / 60000).toString().padStart(2,'0');
                 const s = Math.floor((abs % 60000) / 1000).toString().padStart(2,'0');
-
                 const str = `${isPast ? '+' : '-'} ${d}:${h}:${m}:${s}`;
+                
                 if(clock) {
                     clock.innerText = str;
                     clock.className = `timer-display ${isPast ? 'past' : 'future'}`;
                 }
-
                 if(activeId === t.id) {
                     const md = document.getElementById('modal-display');
                     md.innerText = str;
                     md.className = `modal-display ${isPast ? 'past' : 'future'}`;
                 }
-
                 if(isPast && !t.fired) {
                     if(audioEnabled) document.getElementById('beep').play().catch(()=>{});
-                    if(Notification.permission === "granted") {
-                        new Notification("ALLARMO SCADUTO!", { body: t.name });
-                    }
-                    t.fired = true; 
-                    sync();
+                    if(Notification.permission === "granted") new Notification("SCADUTO!", { body: t.name });
+                    t.fired = true; sync();
                 }
             });
         }
 
         setInterval(tick, 1000);
         render();
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
 </body>
 </html>
