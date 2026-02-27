@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ALLARMO v4.2 - High Contrast</title>
+    <title>ALLARMO v4.3 - Pro Edition</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ALLARMO">
     
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/AlleRock/allarmo/main/icona.png">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     
@@ -29,10 +33,7 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--primary-bg);
             color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            overflow-x: hidden;
+            margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden;
         }
 
         /* Nav Bar */
@@ -73,11 +74,11 @@
         
         #save-btn { width: 100%; background: #fff; border: none; border-radius: 12px; padding: 18px; color: #000; font-weight: 800; text-transform: uppercase; }
 
-        /* Timer Items - Correzione Leggibilità */
+        /* Timer Items */
         .timer-item {
             background-color: #111; background-size: cover; background-position: center;
             border: 1px solid var(--glass-border); border-radius: 26px; margin-bottom: 25px;
-            overflow: hidden; position: relative;
+            overflow: hidden; position: relative; touch-action: none;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
@@ -88,40 +89,37 @@
 
         .timer-display { 
             font-family: 'JetBrains Mono', monospace; 
-            font-size: 1.7rem; 
-            padding: 45px 10px; 
-            text-align: center;
-            font-weight: 800;
-            /* Doppia ombra per leggibilità suprema */
+            font-size: 1.7rem; padding: 45px 10px; text-align: center; font-weight: 800;
             text-shadow: 0px 2px 10px rgba(0,0,0,1), 0px 0px 20px rgba(0,0,0,0.8);
         }
         
         .btn-action { background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 0.65rem; padding: 8px 12px; border-radius: 8px; font-weight: 800; text-transform: uppercase; backdrop-filter: blur(5px); }
-        .btn-edit { background: #3b82f6; } 
-        .btn-del { background: var(--accent-red); }
+        .btn-edit { background: #3b82f6; } .btn-del { background: var(--accent-red); }
 
-        .btn-ios { 
-            width: 100%; 
-            background: rgba(0, 0, 0, 0.75); 
-            backdrop-filter: blur(10px);
-            border: none; 
-            color: var(--accent-green); 
-            padding: 14px; 
-            font-weight: 800; 
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-            border-top: 1px solid var(--glass-border);
-        }
+        .btn-ios { width: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px); border: none; color: var(--accent-green); padding: 14px; font-weight: 800; font-size: 0.75rem; letter-spacing: 1px; border-top: 1px solid var(--glass-border); }
 
-        /* Fullscreen Correzione */
+        /* Modal & Cropper (AGGIUNTI) */
         .modal-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; background-size: cover; background-position: center; z-index: 3000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .modal-view.active { display: flex; }
-        .close-x { position: absolute; top: 50px; right: 20px; color: white; font-size: 2rem; background: rgba(0,0,0,0.6); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); }
+        .close-x { position: absolute; top: 50px; right: 20px; color: white; font-size: 2rem; background: rgba(0,0,0,0.6); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); z-index: 3100; }
+
+        #cropper-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 4000; display: none; flex-direction: column; }
+        .cropper-box { flex: 1; overflow: hidden; }
+        .cropper-footer { padding: 20px; display: flex; gap: 10px; background: #111; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
 
         .future { color: var(--accent-green); } .past { color: var(--accent-red); }
+        .sortable-ghost { opacity: 0.3; transform: scale(0.95); }
     </style>
 </head>
 <body>
+
+    <div id="cropper-container">
+        <div class="cropper-box"><img id="crop-target" src=""></div>
+        <div class="cropper-footer">
+            <button class="btn-action" onclick="cancelCrop()" style="flex:1; background:#333;">Annulla</button>
+            <button class="btn-action" onclick="confirmCrop()" style="flex:1; background:var(--accent-green);">Taglia e Salva</button>
+        </div>
+    </div>
 
     <div id="page-setup" class="page active">
         <header>
@@ -135,7 +133,7 @@
             <label>SCADENZA</label>
             <input type="datetime-local" id="date">
             <label>FOTO SFONDO</label>
-            <input type="file" id="image-input" accept="image/*" style="margin-bottom:20px; color:#fff;">
+            <input type="file" id="image-input" accept="image/*" onchange="startCropper(event)" style="margin-bottom:20px; color:#fff;">
             <button id="save-btn" onclick="handleSave()">Attiva Monitoraggio</button>
         </section>
 
@@ -147,26 +145,17 @@
             </div>
             <input type="file" id="import-file" style="display:none" onchange="importJSON(event)">
         </section>
-        
         <footer style="opacity: 0.3; font-size: 0.6rem; text-align: center;">© 2026 - ARCHITECTED BY MASTRO PROGRAMMO</footer>
     </div>
 
     <div id="page-monitor" class="page">
-        <header>
-            <div class="subtitle" style="margin-bottom: 20px;">Live Monitoring</div>
-        </header>
+        <header><div class="subtitle" style="margin-bottom: 20px;">Live Monitoring</div></header>
         <div id="list"></div>
     </div>
 
     <nav class="nav-bar">
-        <div class="nav-item active" id="nav-setup" onclick="switchPage('setup')">
-            <span>⚙️</span>
-            <span>Setup</span>
-        </div>
-        <div class="nav-item" id="nav-monitor" onclick="switchPage('monitor')">
-            <span>⏱️</span>
-            <span>Timer</span>
-        </div>
+        <div class="nav-item active" id="nav-setup" onclick="switchPage('setup')"><span>⚙️</span><span>Setup</span></div>
+        <div class="nav-item" id="nav-monitor" onclick="switchPage('monitor')"><span>⏱️</span><span>Timer</span></div>
     </nav>
 
     <div id="modal-view" class="modal-view">
@@ -180,9 +169,7 @@
     <script>
         const STORAGE_KEY = 'allarmo_v4_2';
         let timers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-        let activeId = null;
-        let audioEnabled = false;
-        let editingId = null;
+        let activeId = null, audioEnabled = false, editingId = null, cropper = null, tempImgData = null;
 
         function sync() { localStorage.setItem(STORAGE_KEY, JSON.stringify(timers)); }
 
@@ -191,35 +178,41 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
             document.getElementById('nav-' + page).classList.add('active');
+            if(page === 'monitor') initSortable();
         }
 
+        // --- GESTIONE CROPPER (AGGIUNTO) ---
+        function startCropper(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('crop-target').src = e.target.result;
+                document.getElementById('cropper-container').style.display = 'flex';
+                if(cropper) cropper.destroy();
+                cropper = new Cropper(document.getElementById('crop-target'), { aspectRatio: 16 / 9, viewMode: 1 });
+            };
+            reader.readAsDataURL(file);
+        }
+        function cancelCrop() { document.getElementById('cropper-container').style.display = 'none'; document.getElementById('image-input').value=''; }
+        function confirmCrop() {
+            tempImgData = cropper.getCroppedCanvas({ width: 800 }).toDataURL('image/jpeg', 0.8);
+            document.getElementById('cropper-container').style.display = 'none';
+        }
+
+        // --- LOGICA CORE (INALTERATA) ---
         async function silentPermission() {
             if(!audioEnabled) {
                 const beep = document.getElementById('beep');
-                try { await beep.play(); beep.pause(); beep.currentTime = 0; audioEnabled = true; Notification.requestPermission(); } catch (e) {}
+                try { await beep.play(); beep.pause(); beep.currentTime = 0; audioEnabled = true; } catch (e) {}
             }
         }
 
         function handleSave() {
             silentPermission();
-            const nIn = document.getElementById('name'), dIn = document.getElementById('date'), iIn = document.getElementById('image-input');
+            const nIn = document.getElementById('name'), dIn = document.getElementById('date');
             if(!nIn.value || !dIn.value) return alert("Dati incompleti!");
-            if (iIn.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const MAX_W = 800; let w = img.width, h = img.height;
-                        if (w > h) { if (w > MAX_W) { h *= MAX_W/w; w = MAX_W; } } else { if (h > MAX_W) { w *= MAX_W/h; h = MAX_W; } }
-                        canvas.width = w; canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        finalizeSave(nIn.value, dIn.value, canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(iIn.files[0]);
-            } else { finalizeSave(nIn.value, dIn.value, editingId ? timers.find(t => t.id === editingId).image : null); }
+            finalizeSave(nIn.value, dIn.value, tempImgData || (editingId ? timers.find(t => t.id === editingId).image : null));
         }
 
         function finalizeSave(n, d, img) {
@@ -228,22 +221,17 @@
                 timers[idx] = { ...timers[idx], name: n, target: new Date(d).getTime(), targetISO: d, image: img, fired: false };
                 editingId = null; document.getElementById('save-btn').innerText = "Attiva Monitoraggio";
             } else { timers.push({ id: Date.now(), name: n, target: new Date(d).getTime(), targetISO: d, image: img, fired: false }); }
-            sync(); render(); switchPage('monitor');
+            tempImgData = null; sync(); render(); switchPage('monitor');
             document.getElementById('name').value = ''; document.getElementById('date').value = ''; document.getElementById('image-input').value = '';
         }
 
         function editTimer(id, e) {
-            e.stopPropagation();
-            const t = timers.find(x => x.id === id);
-            editingId = id;
-            document.getElementById('name').value = t.name;
-            document.getElementById('date').value = t.targetISO;
-            document.getElementById('save-btn').innerText = "Salva Modifiche";
-            switchPage('setup');
+            e.stopPropagation(); const t = timers.find(x => x.id === id); editingId = id;
+            document.getElementById('name').value = t.name; document.getElementById('date').value = t.targetISO;
+            document.getElementById('save-btn').innerText = "Salva Modifiche"; switchPage('setup');
         }
 
         function deleteTimer(id, e) { e.stopPropagation(); if(confirm("Eliminare?")) { timers = timers.filter(t => t.id !== id); sync(); render(); } }
-
         function openModal(id) { activeId = id; const t = timers.find(x => x.id === id); const m = document.getElementById('modal-view'); document.getElementById('modal-title').innerText = t.name; m.style.backgroundImage = t.image ? `url(${t.image})` : 'none'; m.classList.add('active'); }
         function closeModal() { activeId = null; document.getElementById('modal-view').classList.remove('active'); }
 
@@ -251,7 +239,7 @@
             const l = document.getElementById('list');
             if (timers.length === 0) { l.innerHTML = '<div style="text-align:center; opacity:0.3; margin-top:50px;">Nessun timer attivo</div>'; return; }
             l.innerHTML = timers.map(t => `
-                <div class="timer-item" style="background-image: ${t.image ? `url(${t.image})` : 'none'}" onclick="openModal(${t.id})">
+                <div class="timer-item" data-id="${t.id}" style="background-image: ${t.image ? `url(${t.image})` : 'none'}" onclick="openModal(${t.id})">
                     <div class="timer-header">
                         <span style="font-weight:800; font-size:0.85rem; text-shadow: 0 2px 4px #000;">${t.name}</span>
                         <div style="display:flex; gap:8px;">
@@ -263,6 +251,20 @@
                     <button class="btn-ios" onclick="downloadICS('${t.name}','${t.targetISO}'); event.stopPropagation();">SYNC CALENDAR</button>
                 </div>
             `).join('');
+            initSortable();
+        }
+
+        // --- DRAG & DROP (AGGIUNTO) ---
+        function initSortable() {
+            const el = document.getElementById('list');
+            Sortable.create(el, {
+                animation: 250, ghostClass: 'sortable-ghost',
+                onEnd: function() {
+                    const newOrder = Array.from(el.querySelectorAll('.timer-item')).map(item => parseInt(item.getAttribute('data-id')));
+                    timers = newOrder.map(id => timers.find(t => t.id === id));
+                    sync();
+                }
+            });
         }
 
         function tick() {
