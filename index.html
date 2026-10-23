@@ -9,12 +9,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ALLARMO">
     
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/AlleRock/allarmo/main/icona.png">
+    <link rel="apple-touch-icon" href="./icona.png">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#10b981">
     
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <link href="./vendor/cropper.min.css" rel="stylesheet">
+    <script src="./vendor/cropper.min.js"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="./vendor/fonts.css" rel="stylesheet">
     
     <style>
         :root {
@@ -160,10 +162,82 @@
 
     <script>
         const STORAGE_KEY = 'allarmo_v4_2';
-        let timers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        let savedRaw = null, storageReadFailed = false, damagedArchive = false;
+        let timers = loadTimers();
         let activeId = null, audioEnabled = false, editingId = null, cropper = null, tempImgData = null;
+        let automaticSaveFailed = false;
 
-        function sync() { localStorage.setItem(STORAGE_KEY, JSON.stringify(timers)); }
+        function validImage(value) {
+            if (value == null) return true;
+            if (typeof value !== 'string') return false;
+            if (/^data:image\/(png|jpe?g|gif|webp|bmp|avif|x-icon);base64,[a-z0-9+/=\s]+$/i.test(value)) return true;
+            try { return ['https:', 'http:'].includes(new URL(value, document.baseURI).protocol); }
+            catch (err) { return false; }
+        }
+
+        function validateTimers(data) {
+            if (!Array.isArray(data)) throw new Error('Il file deve contenere un elenco di timer.');
+            const ids = new Set();
+            return data.map((t, index) => {
+                const dateInput = document.createElement('input');
+                dateInput.type = 'datetime-local';
+                dateInput.value = typeof t?.targetISO === 'string' ? t.targetISO : '';
+                if (!t || typeof t !== 'object' || Array.isArray(t) ||
+                    !((typeof t.id === 'number' && Number.isFinite(t.id)) || (typeof t.id === 'string' && t.id.length > 0)) ||
+                    ids.has(String(t.id)) || typeof t.name !== 'string' ||
+                    typeof t.target !== 'number' || !Number.isFinite(t.target) || !Number.isFinite(new Date(t.target).getTime()) ||
+                    !dateInput.value || !Number.isFinite(new Date(t.targetISO).getTime()) ||
+                    !validImage(t.image) || (t.fired !== undefined && typeof t.fired !== 'boolean')) {
+                    throw new Error(`Il timer ${index + 1} contiene dati non validi o un identificativo duplicato.`);
+                }
+                ids.add(String(t.id));
+                return { ...t, image: t.image ?? null, fired: t.fired ?? false };
+            });
+        }
+
+        function loadTimers() {
+            try { savedRaw = localStorage.getItem(STORAGE_KEY); }
+            catch (err) {
+                storageReadFailed = true;
+                setTimeout(() => alert('Impossibile leggere i timer salvati. Il browser non consente l’accesso alla memoria. Nessun dato è stato modificato.'), 0);
+                return [];
+            }
+            if (savedRaw === null) return [];
+            try { return validateTimers(JSON.parse(savedRaw)); }
+            catch (err) {
+                damagedArchive = true;
+                setTimeout(() => alert('L’archivio dei timer non è leggibile. L’originale è stato conservato: usa Export JSON per scaricarlo. Puoi ripristinare un backup valido con Import JSON; prima verrà conservata anche una copia locale dell’originale.'), 0);
+                return [];
+            }
+        }
+
+        // Publish changes in memory only after the browser has saved them successfully.
+        function sync(next = timers, recover = false) {
+            if (storageReadFailed) { alert('Salvataggio non disponibile: impossibile leggere la memoria del browser. Nessun dato è stato sostituito.'); return false; }
+            if (damagedArchive && !recover) { alert('L’archivio originale è protetto. Usa Export JSON per recuperarlo e Import JSON per ripristinare un backup valido. Nessun dato è stato sostituito.'); return false; }
+            try {
+                if (damagedArchive && !confirm('Ripristinare questo backup? L’archivio danneggiato verrà conservato in una copia locale prima di sostituirlo.')) return false;
+                if (localStorage.getItem(STORAGE_KEY) !== savedRaw) {
+                    alert('I timer salvati sono cambiati in un’altra finestra. Esporta i dati aperti, poi ricarica la pagina. Nessun dato è stato sovrascritto.');
+                    return false;
+                }
+                const json = JSON.stringify(next);
+                if (damagedArchive) {
+                    let suffix = Date.now(), key;
+                    do { key = `${STORAGE_KEY}_recovery_${suffix++}`; } while (localStorage.getItem(key) !== null);
+                    localStorage.setItem(key, savedRaw);
+                }
+                localStorage.setItem(STORAGE_KEY, json);
+                savedRaw = json;
+                timers = next;
+                damagedArchive = false;
+                automaticSaveFailed = false;
+                return true;
+            } catch (err) {
+                alert('Salvataggio non riuscito: la memoria del browser potrebbe essere piena o non disponibile. I dati già salvati sono intatti. La modifica non è stata applicata; puoi riprovare o usare Export JSON.');
+                return false;
+            }
+        }
 
         function switchPage(page) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -174,24 +248,28 @@
 
         function startCropper(event) {
             const file = event.target.files[0];
-            if(!file) return;
+            if (!file) return;
             const reader = new FileReader();
+            reader.onerror = () => alert('Impossibile leggere l’immagine. I timer non sono stati modificati.');
             reader.onload = (e) => {
+                if (typeof Cropper === 'undefined') { alert('Il ritaglio immagini non è disponibile. Riapri l’app online per completare il caricamento.'); return; }
                 document.getElementById('crop-target').src = e.target.result;
                 document.getElementById('cropper-container').style.display = 'flex';
-                if(cropper) cropper.destroy();
+                if (cropper) cropper.destroy();
                 cropper = new Cropper(document.getElementById('crop-target'), { aspectRatio: 16 / 9, viewMode: 1 });
             };
             reader.readAsDataURL(file);
         }
-        function cancelCrop() { document.getElementById('cropper-container').style.display = 'none'; document.getElementById('image-input').value=''; }
+        function cancelCrop() { document.getElementById('cropper-container').style.display = 'none'; document.getElementById('image-input').value = ''; }
         function confirmCrop() {
-            tempImgData = cropper.getCroppedCanvas({ width: 800 }).toDataURL('image/jpeg', 0.8);
-            document.getElementById('cropper-container').style.display = 'none';
+            try {
+                tempImgData = cropper.getCroppedCanvas({ width: 800 }).toDataURL('image/jpeg', 0.8);
+                document.getElementById('cropper-container').style.display = 'none';
+            } catch (err) { alert('Impossibile ritagliare l’immagine. Riprova con un’altra foto. I timer non sono stati modificati.'); }
         }
 
         async function silentPermission() {
-            if(!audioEnabled) {
+            if (!audioEnabled) {
                 const beep = document.getElementById('beep');
                 try { await beep.play(); beep.pause(); beep.currentTime = 0; audioEnabled = true; } catch (e) {}
             }
@@ -200,84 +278,177 @@
         function handleSave() {
             silentPermission();
             const nIn = document.getElementById('name'), dIn = document.getElementById('date');
-            if(!nIn.value || !dIn.value) return alert("Dati incompleti!");
-            finalizeSave(nIn.value, dIn.value, tempImgData || (editingId ? timers.find(t => t.id === editingId).image : null));
+            if (!nIn.value || !dIn.value) return alert('Dati incompleti!');
+            const previous = timers.find(t => t.id === editingId);
+            finalizeSave(nIn.value, dIn.value, tempImgData || previous?.image || null);
         }
 
         function finalizeSave(n, d, img) {
-            if (editingId) {
-                const idx = timers.findIndex(t => t.id === editingId);
-                timers[idx] = { ...timers[idx], name: n, target: new Date(d).getTime(), targetISO: d, image: img, fired: false };
-                editingId = null; document.getElementById('save-btn').innerText = "Attiva Monitoraggio";
-            } else { timers.push({ id: Date.now(), name: n, target: new Date(d).getTime(), targetISO: d, image: img, fired: false }); }
-            tempImgData = null; sync(); render(); switchPage('monitor');
+            const target = new Date(d).getTime();
+            if (!Number.isFinite(target)) { alert('La data dell’evento non è valida.'); return; }
+            const next = timers.slice();
+            if (editingId !== null) {
+                const idx = next.findIndex(t => t.id === editingId);
+                if (idx < 0) { alert('Il timer da modificare non è più presente.'); return; }
+                next[idx] = { ...next[idx], name: n, target, targetISO: d, image: img, fired: false };
+            } else {
+                let id = Date.now();
+                while (next.some(t => String(t.id) === String(id))) id++;
+                next.push({ id, name: n, target, targetISO: d, image: img, fired: false });
+            }
+            if (!sync(next)) return;
+            editingId = null; tempImgData = null;
+            document.getElementById('save-btn').innerText = 'Attiva Monitoraggio';
+            render(); switchPage('monitor');
             document.getElementById('name').value = ''; document.getElementById('date').value = ''; document.getElementById('image-input').value = '';
         }
 
-        // --- FUNZIONI DI SPOSTAMENTO (AGGIUNTE) ---
-        function moveUp(id, e) {
-            e.stopPropagation();
-            const idx = timers.findIndex(t => t.id === id);
-            if (idx > 0) {
-                [timers[idx], timers[idx - 1]] = [timers[idx - 1], timers[idx]];
-                sync(); render();
-            }
-        }
-        function moveDown(id, e) {
-            e.stopPropagation();
-            const idx = timers.findIndex(t => t.id === id);
-            if (idx < timers.length - 1) {
-                [timers[idx], timers[idx + 1]] = [timers[idx + 1], timers[idx]];
-                sync(); render();
-            }
+        function moveUp(id, e) { e.stopPropagation(); moveTimer(id, -1); }
+        function moveDown(id, e) { e.stopPropagation(); moveTimer(id, 1); }
+        function moveTimer(id, step) {
+            const idx = timers.findIndex(t => t.id === id), dest = idx + step;
+            if (idx < 0 || dest < 0 || dest >= timers.length) return;
+            const next = timers.slice();
+            [next[idx], next[dest]] = [next[dest], next[idx]];
+            if (sync(next)) render();
         }
 
-        function editTimer(id, e) { e.stopPropagation(); const t = timers.find(x => x.id === id); editingId = id; document.getElementById('name').value = t.name; document.getElementById('date').value = t.targetISO; document.getElementById('save-btn').innerText = "Salva Modifiche"; switchPage('setup'); }
-        function deleteTimer(id, e) { e.stopPropagation(); if(confirm("Eliminare?")) { timers = timers.filter(t => t.id !== id); sync(); render(); } }
-        function openModal(id) { activeId = id; const t = timers.find(x => x.id === id); const m = document.getElementById('modal-view'); document.getElementById('modal-title').innerText = t.name; m.style.backgroundImage = t.image ? `url(${t.image})` : 'none'; m.classList.add('active'); }
+        function editTimer(id, e) {
+            e.stopPropagation(); const t = timers.find(x => x.id === id);
+            if (!t) return;
+            editingId = id; tempImgData = null;
+            document.getElementById('image-input').value = '';
+            document.getElementById('name').value = t.name; document.getElementById('date').value = t.targetISO;
+            document.getElementById('save-btn').innerText = 'Salva Modifiche'; switchPage('setup');
+        }
+        function deleteTimer(id, e) {
+            e.stopPropagation();
+            if (confirm('Eliminare?') && sync(timers.filter(t => t.id !== id))) render();
+        }
+        function imageBackground(element, image) { element.style.backgroundImage = image ? `url(${JSON.stringify(image)})` : 'none'; }
+        function openModal(id) {
+            const t = timers.find(x => x.id === id); if (!t) return;
+            activeId = id; const m = document.getElementById('modal-view');
+            document.getElementById('modal-title').textContent = t.name;
+            imageBackground(m, t.image); m.classList.add('active');
+        }
         function closeModal() { activeId = null; document.getElementById('modal-view').classList.remove('active'); }
 
         function render() {
             const l = document.getElementById('list');
-            if (timers.length === 0) { l.innerHTML = '<div style="text-align:center; opacity:0.3; margin-top:50px;">Nessun timer attivo</div>'; return; }
-            l.innerHTML = timers.map((t, idx) => `
-                <div class="timer-item" style="background-image: ${t.image ? `url(${t.image})` : 'none'}" onclick="openModal(${t.id})">
-                    <div class="timer-header">
-                        <div style="display:flex; gap:5px;">
-                            <button class="btn-action btn-move" onclick="moveUp(${t.id}, event)">▲</button>
-                            <button class="btn-action btn-move" onclick="moveDown(${t.id}, event)">▼</button>
-                        </div>
-                        <span style="font-weight:800; font-size:0.85rem; text-shadow: 0 2px 4px #000; flex:1; text-align:center;">${t.name}</span>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn-action btn-edit" onclick="editTimer(${t.id}, event)">Edit</button>
-                            <button class="btn-action btn-del" onclick="deleteTimer(${t.id}, event)">×</button>
-                        </div>
-                    </div>
-                    <div class="timer-display" id="clock-${t.id}">--:--:--:--</div>
-                    <button class="btn-ios" onclick="downloadICS('${t.name}','${t.targetISO}'); event.stopPropagation();">SYNC CALENDAR</button>
-                </div>
-            `).join('');
+            l.textContent = '';
+            if (timers.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'text-align:center; opacity:0.3; margin-top:50px;';
+                empty.textContent = 'Nessun timer attivo'; l.appendChild(empty); return;
+            }
+            const button = (label, classes, action) => {
+                const b = document.createElement('button'); b.className = classes; b.textContent = label;
+                b.addEventListener('click', e => { e.stopPropagation(); action(e); }); return b;
+            };
+            timers.forEach(t => {
+                const card = document.createElement('div'); card.className = 'timer-item';
+                imageBackground(card, t.image); card.addEventListener('click', () => openModal(t.id));
+                const header = document.createElement('div'); header.className = 'timer-header';
+                const moves = document.createElement('div'); moves.style.cssText = 'display:flex; gap:5px;';
+                moves.appendChild(button('▲', 'btn-action btn-move', e => moveUp(t.id, e)));
+                moves.appendChild(button('▼', 'btn-action btn-move', e => moveDown(t.id, e)));
+                const name = document.createElement('span');
+                name.style.cssText = 'font-weight:800; font-size:0.85rem; text-shadow: 0 2px 4px #000; flex:1; text-align:center;';
+                name.textContent = t.name;
+                const actions = document.createElement('div'); actions.style.cssText = 'display:flex; gap:8px;';
+                actions.appendChild(button('Edit', 'btn-action btn-edit', e => editTimer(t.id, e)));
+                actions.appendChild(button('×', 'btn-action btn-del', e => deleteTimer(t.id, e)));
+                header.appendChild(moves); header.appendChild(name); header.appendChild(actions);
+                const clock = document.createElement('div'); clock.className = 'timer-display';
+                clock.id = `clock-${t.id}`; clock.textContent = '--:--:--:--';
+                card.appendChild(header); card.appendChild(clock);
+                card.appendChild(button('SYNC CALENDAR', 'btn-ios', () => downloadICS(t.name, t.targetISO)));
+                l.appendChild(card);
+            });
         }
 
         function tick() {
-            const now = Date.now();
+            const now = Date.now(); let changed = false;
             timers.forEach(t => {
                 const diff = t.target - now, isPast = diff < 0, abs = Math.abs(diff);
                 const d = Math.floor(abs/86400000), h = Math.floor((abs%86400000)/3600000).toString().padStart(2,'0'), m = Math.floor((abs%3600000)/60000).toString().padStart(2,'0'), s = Math.floor((abs%60000)/1000).toString().padStart(2,'0');
                 const str = `${isPast ? '+ ' : '- '}${d}D ${h}H ${m}' ${s}"`;
                 const clk = document.getElementById(`clock-${t.id}`);
-                if(clk) { clk.innerText = str; clk.className = `timer-display ${isPast ? 'past' : 'future'}`; }
-                if(activeId === t.id) { document.getElementById('modal-display').innerText = str; document.getElementById('modal-display').className = `timer-display ${isPast ? 'past' : 'future'}`; }
-                if(isPast && !t.fired) { if(audioEnabled) document.getElementById('beep').play(); t.fired = true; sync(); }
+                if (clk) { clk.innerText = str; clk.className = `timer-display ${isPast ? 'past' : 'future'}`; }
+                if (activeId === t.id) { document.getElementById('modal-display').innerText = str; document.getElementById('modal-display').className = `timer-display ${isPast ? 'past' : 'future'}`; }
+                if (isPast && !t.fired) {
+                    if (audioEnabled) document.getElementById('beep').play().catch(() => {});
+                    t.fired = true; changed = true;
+                }
             });
+            // Do not repeat a failing automatic save every second.
+            if (changed && !automaticSaveFailed) automaticSaveFailed = !sync();
         }
 
-        function exportJSON() { const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(JSON.stringify(timers)); const link = document.createElement('a'); link.setAttribute('href', dataUri); link.setAttribute('download', 'allarmo_backup.json'); link.click(); }
-        function importJSON(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const imported = JSON.parse(e.target.result); if (Array.isArray(imported)) { timers = imported; sync(); render(); alert("Importato!"); } } catch (err) { alert("Errore!"); } }; reader.readAsText(file); }
-        function downloadICS(n, dS) { const date = new Date(dS), s = date.toISOString().replace(/-|:|\.\d+/g, ""), e = new Date(date.getTime() + 60000).toISOString().replace(/-|:|\.\d+/g, ""), ics = ["BEGIN:VCALENDAR","VERSION:2.0","BEGIN:VEVENT",`SUMMARY:ALLARMO: ${n}`,`DTSTART:${s}`,`DTEND:${e}`,"BEGIN:VALARM","TRIGGER:-PT0M","ACTION:DISPLAY","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n"); const blob = new Blob([ics], { type: "text/calendar" }); const link = document.createElement("a"); link.href = window.URL.createObjectURL(blob); link.download = `${n}.ics`; link.click(); }
+        function downloadFile(content, type, filename) {
+            const url = URL.createObjectURL(new Blob([content], { type })), link = document.createElement('a');
+            link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
+        function exportJSON() {
+            if (storageReadFailed) { alert('Impossibile esportare: l’archivio salvato non è accessibile. Nessun dato è stato modificato.'); return; }
+            downloadFile(damagedArchive ? savedRaw : JSON.stringify(timers), 'application/json;charset=utf-8', 'allarmo_backup.json');
+        }
+        function importJSON(e) {
+            const input = e.target, file = input.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onerror = () => { alert('Impossibile leggere il file. I timer esistenti non sono stati modificati.'); input.value = ''; };
+            reader.onload = () => {
+                try {
+                    const imported = validateTimers(JSON.parse(reader.result));
+                    if (!sync(imported, true)) return;
+                    editingId = null; tempImgData = null;
+                    document.getElementById('save-btn').innerText = 'Attiva Monitoraggio';
+                    render(); alert('Importato!');
+                } catch (err) { alert('Importazione non riuscita: il file JSON non contiene un archivio di timer valido. I timer esistenti non sono stati modificati.'); }
+                finally { input.value = ''; }
+            };
+            reader.readAsText(file);
+        }
 
+        function escapeICSText(value) {
+            return value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
+                .replace(/\\/g, '\\\\').replace(/\r\n|\r|\n/g, '\\n').replace(/;/g, '\\;').replace(/,/g, '\\,');
+        }
+        function foldICSLine(line) {
+            const encoder = new TextEncoder(); let result = '', octets = 0;
+            for (const character of line) {
+                const size = encoder.encode(character).length;
+                if (octets + size > 75) { result += '\r\n '; octets = 1; }
+                result += character; octets += size;
+            }
+            return result;
+        }
+        function buildICS(n, dS) {
+            const date = new Date(dS), format = d => d.toISOString().replace(/-|:|\.\d+/g, '');
+            const uid = `${Date.now()}-${Array.from(crypto.getRandomValues(new Uint32Array(2)), v => v.toString(16)).join('')}@allarmo.local`;
+            const summary = escapeICSText('ALLARMO: ' + n);
+            return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ALLARMO//IT', 'BEGIN:VEVENT',
+                `UID:${uid}`, `DTSTAMP:${format(new Date())}`, `SUMMARY:${summary}`,
+                `DTSTART:${format(date)}`, `DTEND:${format(new Date(date.getTime() + 60000))}`,
+                'BEGIN:VALARM', 'TRIGGER:-PT0M', 'ACTION:DISPLAY', `DESCRIPTION:${summary}`,
+                'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].map(foldICSLine).join('\r\n') + '\r\n';
+        }
+        function downloadICS(n, dS) {
+            try { downloadFile(buildICS(n, dS), 'text/calendar;charset=utf-8', `${n}.ics`); }
+            catch (err) { alert('Impossibile esportare l’evento: verifica che la data sia valida. I timer non sono stati modificati.'); }
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+                    .catch(err => console.warn('ALLARMO: modalità offline non disponibile.', err));
+            });
+        }
         setInterval(tick, 1000);
         render();
+
     </script>
 </body>
 </html>
